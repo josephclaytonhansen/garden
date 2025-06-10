@@ -119,6 +119,53 @@ router.post("/VegetableTypes/:id/edit", async (req, res) => {
   }
 })
 
+router.post("/attachVegetableTypeToPlant", async (req, res) => {
+  try {
+    const { plantId, vegetableTypeId } = req.body
+    if (!plantId || !vegetableTypeId) {
+      return res
+        .status(400)
+        .json({ error: "Plant ID and Vegetable Type ID are required." })
+    }
+    const plant = await Plant.findByPk(plantId)
+    if (!plant) {
+      return res.status(404).json({ error: "Plant not found" })
+    }
+    const vegetableType = await VegetableType.findByPk(vegetableTypeId)
+    if (!vegetableType) {
+      return res.status(404).json({ error: "Vegetable type not found" })
+    }
+    vegetableType.plantId = plant.id
+    await vegetableType.save()
+    res.json(vegetableType)
+  } catch (error) {
+    console.error("Error attaching vegetable type to plant:", error)
+    res.status(500).json({ error: "Failed to attach vegetable type to plant" })
+  }
+}
+)
+
+router.post("/detachVegetableTypeFromPlant", async (req, res) => {
+  try {
+    const { vegetableTypeId } = req.body
+    if (!vegetableTypeId) {
+      return res
+        .status(400)
+        .json({ error: "Vegetable Type ID is required." })
+    }
+    const vegetableType = await VegetableType.findByPk(vegetableTypeId)
+    if (!vegetableType) {
+      return res.status(404).json({ error: "Vegetable type not found" })
+    }
+    vegetableType.plantId = null
+    await vegetableType.save()
+    res.json(vegetableType)
+  } catch (error) {
+    console.error("Error detaching vegetable type from plant:", error)
+    res.status(500).json({ error: "Failed to detach vegetable type from plant" })
+  }
+})
+
 router.get("/VegetableTypes/:id", async (req, res) => {
   try {
     const { id } = req.params
@@ -386,6 +433,52 @@ router.post("/plants/:id/delete", async (req, res) => {
   }
 })
 
+router.post("/attachPlantToLocation", async (req, res) => {
+  try {
+    const { plantId, locationId } = req.body
+    if (!plantId || !locationId) {
+      return res
+        .status(400)
+        .json({ error: "Plant ID and Location ID are required." })
+    }
+    const plant = await Plant.findByPk(plantId)
+    if (!plant) {
+      return res.status(404).json({ error: "Plant not found" })
+    }
+    const location = await Location.findByPk(locationId)
+    if (!location) {
+      return res.status(404).json({ error: "Location not found" })
+    }
+    plant.locationId = location.id
+    await plant.save()
+    res.json(plant)
+  } catch (error) {
+    console.error("Error attaching plant to location:", error)
+    res.status(500).json({ error: "Failed to attach plant to location" })
+  }
+}
+)
+
+router.post("/detachPlantFromLocation", async (req, res) => {
+  try {
+    const { plantId } = req.body
+    if (!plantId) {
+      return res.status(400).json({ error: "Plant ID is required." })
+    }
+    const plant = await Plant.findByPk(plantId)
+    if (!plant) {
+      return res.status(404).json({ error: "Plant not found" })
+    }
+    plant.locationId = null
+    await plant.save()
+    res.json(plant)
+  } catch (error) {
+    console.error("Error detaching plant from location:", error)
+    res.status(500).json({ error: "Failed to detach plant from location" })
+  }
+}
+)
+
 router.get("/bug-treatments", async (req, res) => {
   try {
     const treatments = await BugTreatment.findAll({
@@ -469,6 +562,52 @@ router.get("/bug-treatments/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch bug treatment" })
   }
 })
+
+router.post("/attachBugTreatmentToLocation", async (req, res) => {
+  try {
+    const { bugTreatmentId, locationId } = req.body
+    if (!bugTreatmentId || !locationId) {
+      return res
+        .status(400)
+        .json({ error: "Bug Treatment ID and Location ID are required." })
+    }
+    const treatment = await BugTreatment.findByPk(bugTreatmentId)
+    if (!treatment) {
+      return res.status(404).json({ error: "Bug treatment not found" })
+    }
+    const location = await Location.findByPk(locationId)
+    if (!location) {
+      return res.status(404).json({ error: "Location not found" })
+    }
+    treatment.locationId = location.id
+    await treatment.save()
+    res.json(treatment)
+  } catch (error) {
+    console.error("Error attaching bug treatment to location:", error)
+    res.status(500).json({ error: "Failed to attach bug treatment to location" })
+  }
+}
+)
+
+router.post("/detachBugTreatmentFromLocation", async (req, res) => {
+  try {
+    const { bugTreatmentId } = req.body
+    if (!bugTreatmentId) {
+      return res.status(400).json({ error: "Bug Treatment ID is required." })
+    }
+    const treatment = await BugTreatment.findByPk(bugTreatmentId)
+    if (!treatment) {
+      return res.status(404).json({ error: "Bug treatment not found" })
+    }
+    treatment.locationId = null
+    await treatment.save()
+    res.json(treatment)
+  } catch (error) {
+    console.error("Error detaching bug treatment from location:", error)
+    res.status(500).json({ error: "Failed to detach bug treatment from location" })
+  }
+}
+)
 
 router.get("/locations", async (req, res) => {
   try {

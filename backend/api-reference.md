@@ -141,6 +141,29 @@
             *   `id` (integer, **required**): The ID of the vegetable type to delete.
     *   **Response:** Status 204 (No Content) on successful deletion.
 
+*   **POST /attachVegetableTypeToPlant**
+    *   **Description:** Attaches an existing vegetable type to an existing plant. This updates the `plantId` on the `VegetableType`.
+    *   **Parameters:**
+        *   **Body:**
+            *   `plantId` (integer, **required**): The ID of the plant.
+            *   `vegetableTypeId` (integer, **required**): The ID of the vegetable type to attach.
+    *   **Response:** The updated VegetableType object.
+
+*   **POST /detachVegetableTypeFromPlant**
+    *   **Description:** Detaches a vegetable type from its currently associated plant. This sets the `plantId` on the `VegetableType` to `null`.
+    *   **Parameters:**
+        *   **Body:**
+            *   `vegetableTypeId` (integer, **required**): The ID of the vegetable type to detach.
+    *   **Response:** The updated VegetableType object.
+
+*   **POST /attachPlantToLocation**
+    *   **Description:** Attaches an existing plant to an existing location. This updates the `locationId` on the `Plant`.
+    *   **Parameters:**
+        *   **Body:**
+            *   `plantId` (integer, **required**): The ID of the plant to attach.
+            *   `locationId` (integer, **required**): The ID of the location.
+    *   **Response:** The updated Plant object.
+
 ## Vegetable
 
 *   **GET /vegetables**
@@ -222,3 +245,25 @@
         *   **URL:**
             *   `id` (integer, **required**): The ID of the bug treatment entry to retrieve.
     *   **Response:** A BugTreatment object with nested Location data.
+
+*   **POST /detachPlantFromLocation**
+    *   **Description:** Detaches a plant from its currently associated location. This sets the `locationId` on the `Plant` to `null`.
+    *   **Parameters:**
+        *   **Body:**
+            *   `plantId` (integer, **required**): The ID of the plant to detach.
+    *   **Response:** The updated Plant object.
+
+*   **POST /attachBugTreatmentToLocation**
+    *   **Description:** Attaches an existing bug treatment to an existing location. This updates the `locationId` on the `BugTreatment`.
+    *   **Parameters:**
+        *   **Body:**
+            *   `bugTreatmentId` (integer, **required**): The ID of the bug treatment to attach.
+            *   `locationId` (integer, **required**): The ID of the location.
+    *   **Response:** The updated BugTreatment object.
+
+*   **POST /detachBugTreatmentFromLocation**
+    *   **Description:** Detaches a bug treatment from its currently associated location. This sets the `locationId` on the `BugTreatment` to `null`.
+    *   **Parameters:**
+        *   **Body:**
+            *   `bugTreatmentId` (integer, **required**): The ID of the bug treatment to detach.
+    *   **Response:** The updated BugTreatment object.
