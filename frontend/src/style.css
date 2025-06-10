@@ -180,3 +180,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+h2{
+  @apply text-2xl font-semibold tracking-tight;
+}
+
+[data-state="active"][role="tab"] {
+  @apply font-semibold text-zinc-900 dark:text-zinc-100;
+}
