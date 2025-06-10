@@ -1,13 +1,13 @@
-const express = require("express");
-const { Sequelize, Model, DataTypes, Op } = require("sequelize");
-const path = require("path");
+const express = require("express")
+const { Sequelize, Model, DataTypes, Op } = require("sequelize")
+const path = require("path")
 
 const sequelize = new Sequelize({
   dialect: "sqlite",
   storage: path.join(__dirname, "database.sqlite"),
-});
+})
 
-const router = express.Router();
+const router = express.Router()
 
 class Vegetable extends Model {}
 Vegetable.init(
@@ -18,7 +18,7 @@ Vegetable.init(
     harvestedAt: DataTypes.DATE,
   },
   { sequelize, modelName: "Vegetable" },
-);
+)
 
 class VegetableType extends Model {}
 VegetableType.init(
@@ -27,7 +27,7 @@ VegetableType.init(
     icon: DataTypes.STRING,
   },
   { sequelize, modelName: "VegetableType" },
-);
+)
 
 class Plant extends Model {}
 Plant.init(
@@ -37,7 +37,7 @@ Plant.init(
     origin: DataTypes.STRING,
   },
   { sequelize, modelName: "Plant" },
-);
+)
 
 class Location extends Model {}
 Location.init(
@@ -46,7 +46,7 @@ Location.init(
     description: DataTypes.STRING,
   },
   { sequelize, modelName: "Location" },
-);
+)
 
 class BugTreatment extends Model {}
 BugTreatment.init(
@@ -55,136 +55,136 @@ BugTreatment.init(
     date: DataTypes.DATE,
   },
   { sequelize, modelName: "BugTreatment" },
-);
+)
 
-Vegetable.belongsTo(VegetableType, { foreignKey: "VegetableTypeId" });
-VegetableType.hasMany(Vegetable, { foreignKey: "VegetableTypeId" });
-VegetableType.belongsTo(Plant, { foreignKey: "plantId" });
-Plant.hasOne(VegetableType, { foreignKey: "plantId" });
-Plant.belongsTo(Location, { foreignKey: "locationId" });
-Location.hasMany(Plant, { foreignKey: "locationId" });
-BugTreatment.belongsTo(Location, { foreignKey: "locationId" });
-Location.hasMany(BugTreatment, { foreignKey: "locationId" });
+Vegetable.belongsTo(VegetableType, { foreignKey: "VegetableTypeId" })
+VegetableType.hasMany(Vegetable, { foreignKey: "VegetableTypeId" })
+VegetableType.belongsTo(Plant, { foreignKey: "plantId" })
+Plant.hasOne(VegetableType, { foreignKey: "plantId" })
+Plant.belongsTo(Location, { foreignKey: "locationId" })
+Location.hasMany(Plant, { foreignKey: "locationId" })
+BugTreatment.belongsTo(Location, { foreignKey: "locationId" })
+Location.hasMany(BugTreatment, { foreignKey: "locationId" })
 
 sequelize
   .sync()
   .then(() => {
-    console.log("Database synchronized successfully.");
+    console.log("Database synchronized successfully.")
   })
   .catch((err) => {
-    console.error("Unable to create database:", err);
-  });
+    console.error("Unable to create database:", err)
+  })
 
 router.get("/VegetableTypes", async (req, res) => {
   try {
-    const types = await VegetableType.findAll();
-    res.json(types);
+    const types = await VegetableType.findAll()
+    res.json(types)
   } catch (error) {
-    console.error("Error fetching vegetable types:", error);
-    res.status(500).json({ error: "Failed to fetch vegetable types" });
+    console.error("Error fetching vegetable types:", error)
+    res.status(500).json({ error: "Failed to fetch vegetable types" })
   }
-});
+})
 
 router.post("/VegetableTypes/new", async (req, res) => {
   try {
-    const { name, icon } = req.body;
+    const { name, icon } = req.body
     if (!name) {
       return res
         .status(400)
-        .json({ error: "Name is required for vegetable type." });
+        .json({ error: "Name is required for vegetable type." })
     }
-    const newType = await VegetableType.create({ name, icon });
-    res.status(201).json(newType);
+    const newType = await VegetableType.create({ name, icon })
+    res.status(201).json(newType)
   } catch (error) {
-    console.error("Error creating vegetable type:", error);
-    res.status(500).json({ error: "Failed to create vegetable type" });
+    console.error("Error creating vegetable type:", error)
+    res.status(500).json({ error: "Failed to create vegetable type" })
   }
-});
+})
 
 router.post("/VegetableTypes/:id/edit", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, icon } = req.body;
-    const type = await VegetableType.findByPk(id);
+    const { id } = req.params
+    const { name, icon } = req.body
+    const type = await VegetableType.findByPk(id)
     if (!type) {
-      return res.status(404).json({ error: "Vegetable type not found" });
+      return res.status(404).json({ error: "Vegetable type not found" })
     }
-    type.name = name || type.name;
-    type.icon = icon || type.icon;
-    await type.save();
-    res.json(type);
+    type.name = name || type.name
+    type.icon = icon || type.icon
+    await type.save()
+    res.json(type)
   } catch (error) {
-    console.error("Error updating vegetable type:", error);
-    res.status(500).json({ error: "Failed to update vegetable type" });
+    console.error("Error updating vegetable type:", error)
+    res.status(500).json({ error: "Failed to update vegetable type" })
   }
-});
+})
 
 router.get("/VegetableTypes/:id", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
     const type = await VegetableType.findByPk(id, {
       include: [{ model: Vegetable }, { model: Plant }],
-    });
+    })
     if (!type) {
-      return res.status(404).json({ error: "Vegetable type not found" });
+      return res.status(404).json({ error: "Vegetable type not found" })
     }
-    res.json(type);
+    res.json(type)
   } catch (error) {
-    console.error("Error fetching vegetable type:", error);
-    res.status(500).json({ error: "Failed to fetch vegetable type" });
+    console.error("Error fetching vegetable type:", error)
+    res.status(500).json({ error: "Failed to fetch vegetable type" })
   }
-});
+})
 
 router.get("/VegetableTypes/:id/Vegetables", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
     const type = await VegetableType.findByPk(id, {
       include: Vegetable,
-    });
+    })
     if (!type) {
-      return res.status(404).json({ error: "Vegetable type not found" });
+      return res.status(404).json({ error: "Vegetable type not found" })
     }
-    res.json(type.Vegetables || []);
+    res.json(type.Vegetables || [])
   } catch (error) {
-    console.error("Error fetching vegetables for type:", error);
-    res.status(500).json({ error: "Failed to fetch vegetables for this type" });
+    console.error("Error fetching vegetables for type:", error)
+    res.status(500).json({ error: "Failed to fetch vegetables for this type" })
   }
-});
+})
 
 router.post("/VegetableTypes/:id/delete", async (req, res) => {
   try {
-    const { id } = req.params;
-    const type = await VegetableType.findByPk(id);
+    const { id } = req.params
+    const type = await VegetableType.findByPk(id)
     if (!type) {
-      return res.status(404).json({ error: "Vegetable type not found" });
+      return res.status(404).json({ error: "Vegetable type not found" })
     }
-    await type.destroy();
-    res.status(204).send();
+    await type.destroy()
+    res.status(204).send()
   } catch (error) {
-    console.error("Error deleting vegetable type:", error);
-    res.status(500).json({ error: "Failed to delete vegetable type" });
+    console.error("Error deleting vegetable type:", error)
+    res.status(500).json({ error: "Failed to delete vegetable type" })
   }
-});
+})
 
 router.get("/vegetables", async (req, res) => {
   try {
     const vegetables = await Vegetable.findAll({
       include: VegetableType,
-    });
-    res.json(vegetables);
+    })
+    res.json(vegetables)
   } catch (error) {
-    console.error("Error fetching vegetables:", error);
-    res.status(500).json({ error: "Failed to fetch vegetables" });
+    console.error("Error fetching vegetables:", error)
+    res.status(500).json({ error: "Failed to fetch vegetables" })
   }
-});
+})
 
 router.post("/vegetables/new", async (req, res) => {
   try {
-    const { name, rating, quantity, harvestedAt, VegetableTypeId } = req.body;
+    const { name, rating, quantity, harvestedAt, VegetableTypeId } = req.body
     if (!name || !VegetableTypeId) {
       return res
         .status(400)
-        .json({ error: "Name and VegetableTypeId are required." });
+        .json({ error: "Name and VegetableTypeId are required." })
     }
     const newVegetable = await Vegetable.create({
       name,
@@ -192,81 +192,81 @@ router.post("/vegetables/new", async (req, res) => {
       quantity,
       harvestedAt,
       VegetableTypeId,
-    });
-    res.status(201).json(newVegetable);
+    })
+    res.status(201).json(newVegetable)
   } catch (error) {
-    console.error("Error creating vegetable:", error);
-    res.status(500).json({ error: "Failed to create vegetable" });
+    console.error("Error creating vegetable:", error)
+    res.status(500).json({ error: "Failed to create vegetable" })
   }
-});
+})
 
 router.post("/vegetables/:id/edit", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, rating, quantity, harvestedAt, VegetableTypeId } = req.body;
-    const veg = await Vegetable.findByPk(id);
+    const { id } = req.params
+    const { name, rating, quantity, harvestedAt, VegetableTypeId } = req.body
+    const veg = await Vegetable.findByPk(id)
     if (!veg) {
-      return res.status(404).json({ error: "Vegetable not found" });
+      return res.status(404).json({ error: "Vegetable not found" })
     }
-    veg.name = name || veg.name;
-    veg.rating = rating === undefined ? veg.rating : rating;
-    veg.quantity = quantity === undefined ? veg.quantity : quantity;
-    veg.harvestedAt = harvestedAt || veg.harvestedAt;
-    veg.VegetableTypeId = VegetableTypeId || veg.VegetableTypeId;
-    await veg.save();
-    res.json(veg);
+    veg.name = name || veg.name
+    veg.rating = rating === undefined ? veg.rating : rating
+    veg.quantity = quantity === undefined ? veg.quantity : quantity
+    veg.harvestedAt = harvestedAt || veg.harvestedAt
+    veg.VegetableTypeId = VegetableTypeId || veg.VegetableTypeId
+    await veg.save()
+    res.json(veg)
   } catch (error) {
-    console.error("Error updating vegetable:", error);
-    res.status(500).json({ error: "Failed to update vegetable" });
+    console.error("Error updating vegetable:", error)
+    res.status(500).json({ error: "Failed to update vegetable" })
   }
-});
+})
 
 router.get("/vegetables/:id", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
     const veg = await Vegetable.findByPk(id, {
       include: VegetableType,
-    });
+    })
     if (!veg) {
-      return res.status(404).json({ error: "Vegetable not found" });
+      return res.status(404).json({ error: "Vegetable not found" })
     }
-    res.json(veg);
+    res.json(veg)
   } catch (error) {
-    console.error("Error fetching vegetable:", error);
-    res.status(500).json({ error: "Failed to fetch vegetable" });
+    console.error("Error fetching vegetable:", error)
+    res.status(500).json({ error: "Failed to fetch vegetable" })
   }
-});
+})
 
 router.post("/vegetables/:id/delete", async (req, res) => {
   try {
-    const { id } = req.params;
-    const veg = await Vegetable.findByPk(id);
+    const { id } = req.params
+    const veg = await Vegetable.findByPk(id)
     if (!veg) {
-      return res.status(404).json({ error: "Vegetable not found" });
+      return res.status(404).json({ error: "Vegetable not found" })
     }
-    await veg.destroy();
-    res.status(204).send();
+    await veg.destroy()
+    res.status(204).send()
   } catch (error) {
-    console.error("Error deleting vegetable:", error);
-    res.status(500).json({ error: "Failed to delete vegetable" });
+    console.error("Error deleting vegetable:", error)
+    res.status(500).json({ error: "Failed to delete vegetable" })
   }
-});
+})
 
 router.get("/harvest/:mmyy", async (req, res) => {
   try {
-    const { mmyy } = req.params;
-    const [monthStr, yearStr] = mmyy.split("-");
-    const month = parseInt(monthStr, 10);
-    const year = parseInt(yearStr, 10);
+    const { mmyy } = req.params
+    const [monthStr, yearStr] = mmyy.split("-")
+    const month = parseInt(monthStr, 10)
+    const year = parseInt(yearStr, 10)
 
     if (isNaN(month) || isNaN(year) || month < 1 || month > 12) {
       return res
         .status(400)
-        .json({ error: "Invalid month-year format. Use MM-YYYY." });
+        .json({ error: "Invalid month-year format. Use MM-YYYY." })
     }
 
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    const startDate = new Date(year, month - 1, 1)
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999)
 
     const vegetables = await Vegetable.findAll({
       where: {
@@ -276,144 +276,144 @@ router.get("/harvest/:mmyy", async (req, res) => {
       },
       include: VegetableType,
       order: [["harvestedAt", "DESC"]],
-    });
-    res.json(vegetables);
+    })
+    res.json(vegetables)
   } catch (error) {
-    console.error("Error fetching harvest data:", error);
-    res.status(500).json({ error: "Failed to fetch harvest data" });
+    console.error("Error fetching harvest data:", error)
+    res.status(500).json({ error: "Failed to fetch harvest data" })
   }
-});
+})
 
 router.get("/plants", async (req, res) => {
   try {
     const plants = await Plant.findAll({
       include: [Location, VegetableType],
-    });
-    res.json(plants);
+    })
+    res.json(plants)
   } catch (error) {
-    console.error("Error fetching plants:", error);
-    res.status(500).json({ error: "Failed to fetch plants" });
+    console.error("Error fetching plants:", error)
+    res.status(500).json({ error: "Failed to fetch plants" })
   }
-});
+})
 
 router.post("/plants/new", async (req, res) => {
   try {
-    const { name, plantedAt, locationId, origin } = req.body;
+    const { name, plantedAt, locationId, origin } = req.body
     if (!name)
-      return res.status(400).json({ error: "Plant name is required." });
+      return res.status(400).json({ error: "Plant name is required." })
     const newPlant = await Plant.create({
       name,
       plantedAt,
       locationId,
       origin,
-    });
-    res.status(201).json(newPlant);
+    })
+    res.status(201).json(newPlant)
   } catch (error) {
-    console.error("Error creating plant:", error);
-    res.status(500).json({ error: "Failed to create plant" });
+    console.error("Error creating plant:", error)
+    res.status(500).json({ error: "Failed to create plant" })
   }
-});
+})
 
 router.post("/plants/:id/edit", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, plantedAt, locationId, origin } = req.body;
-    const plantToEdit = await Plant.findByPk(id);
+    const { id } = req.params
+    const { name, plantedAt, locationId, origin } = req.body
+    const plantToEdit = await Plant.findByPk(id)
     if (!plantToEdit) {
-      return res.status(404).json({ error: "Plant not found" });
+      return res.status(404).json({ error: "Plant not found" })
     }
-    plantToEdit.name = name || plantToEdit.name;
-    plantToEdit.plantedAt = plantedAt || plantToEdit.plantedAt;
+    plantToEdit.name = name || plantToEdit.name
+    plantToEdit.plantedAt = plantedAt || plantToEdit.plantedAt
     plantToEdit.locationId =
-      locationId === undefined ? plantToEdit.locationId : locationId;
-    plantToEdit.origin = origin || plantToEdit.origin;
-    await plantToEdit.save();
-    res.json(plantToEdit);
+      locationId === undefined ? plantToEdit.locationId : locationId
+    plantToEdit.origin = origin || plantToEdit.origin
+    await plantToEdit.save()
+    res.json(plantToEdit)
   } catch (error) {
-    console.error("Error updating plant:", error);
-    res.status(500).json({ error: "Failed to update plant" });
+    console.error("Error updating plant:", error)
+    res.status(500).json({ error: "Failed to update plant" })
   }
-});
+})
 
 router.get("/plants/:id", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
     const plantDetail = await Plant.findByPk(id, {
       include: [Location, VegetableType],
-    });
+    })
     if (!plantDetail) {
-      return res.status(404).json({ error: "Plant not found" });
+      return res.status(404).json({ error: "Plant not found" })
     }
-    res.json(plantDetail);
+    res.json(plantDetail)
   } catch (error) {
-    console.error("Error fetching plant:", error);
-    res.status(500).json({ error: "Failed to fetch plant" });
+    console.error("Error fetching plant:", error)
+    res.status(500).json({ error: "Failed to fetch plant" })
   }
-});
+})
 
 router.get("/plants/:id/vegetabletype", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
     const plantDetail = await Plant.findByPk(id, {
       include: VegetableType,
-    });
+    })
 
     if (!plantDetail) {
-      return res.status(404).json({ error: "Plant not found" });
+      return res.status(404).json({ error: "Plant not found" })
     }
 
-    res.json(plantDetail.VegetableType || null);
+    res.json(plantDetail.VegetableType || null)
   } catch (error) {
-    console.error("Error fetching vegetable types for plant:", error);
+    console.error("Error fetching vegetable types for plant:", error)
     res
       .status(500)
-      .json({ error: "Failed to fetch vegetable type for this plant" });
+      .json({ error: "Failed to fetch vegetable type for this plant" })
   }
-});
+})
 
 router.post("/plants/:id/delete", async (req, res) => {
   try {
-    const { id } = req.params;
-    const plantToDelete = await Plant.findByPk(id);
+    const { id } = req.params
+    const plantToDelete = await Plant.findByPk(id)
     if (!plantToDelete) {
-      return res.status(404).json({ error: "Plant not found" });
+      return res.status(404).json({ error: "Plant not found" })
     }
-    await plantToDelete.destroy();
-    res.status(204).send();
+    await plantToDelete.destroy()
+    res.status(204).send()
   } catch (error) {
-    console.error("Error deleting plant:", error);
-    res.status(500).json({ error: "Failed to delete plant" });
+    console.error("Error deleting plant:", error)
+    res.status(500).json({ error: "Failed to delete plant" })
   }
-});
+})
 
 router.get("/bug-treatments", async (req, res) => {
   try {
     const treatments = await BugTreatment.findAll({
       include: Location,
       order: [["date", "DESC"]],
-    });
-    res.json(treatments);
+    })
+    res.json(treatments)
   } catch (error) {
-    console.error("Error fetching bug treatments:", error);
-    res.status(500).json({ error: "Failed to fetch bug treatments" });
+    console.error("Error fetching bug treatments:", error)
+    res.status(500).json({ error: "Failed to fetch bug treatments" })
   }
-});
+})
 
 router.post("/bug-treatments/new", async (req, res) => {
   try {
-    const { type, date, locationId } = req.body;
+    const { type, date, locationId } = req.body
     if (!type || !date || locationId === undefined) {
       return res
         .status(400)
-        .json({ error: "Type, date, and locationId are required." });
+        .json({ error: "Type, date, and locationId are required." })
     }
-    const newTreatment = await BugTreatment.create({ type, date, locationId });
-    res.status(201).json(newTreatment);
+    const newTreatment = await BugTreatment.create({ type, date, locationId })
+    res.status(201).json(newTreatment)
   } catch (error) {
-    console.error("Error creating bug treatment:", error);
-    res.status(500).json({ error: "Failed to create bug treatment" });
+    console.error("Error creating bug treatment:", error)
+    res.status(500).json({ error: "Failed to create bug treatment" })
   }
-});
+})
 
 router.get("/bug-treatments/recent", async (req, res) => {
   try {
@@ -431,44 +431,44 @@ router.get("/bug-treatments/recent", async (req, res) => {
         mapToModel: true,
         model: BugTreatment,
       },
-    );
+    )
 
     const result = treatments.map((t) => {
-      const treatmentJson = t.toJSON();
+      const treatmentJson = t.toJSON()
       if (treatmentJson.LocationName) {
         treatmentJson.Location = {
           id: t.locationId,
           name: treatmentJson.LocationName,
           description: treatmentJson.LocationDescription,
-        };
-        delete treatmentJson.LocationName;
-        delete treatmentJson.LocationDescription;
+        }
+        delete treatmentJson.LocationName
+        delete treatmentJson.LocationDescription
       }
-      return treatmentJson;
-    });
+      return treatmentJson
+    })
 
-    res.json(result);
+    res.json(result)
   } catch (error) {
-    console.error("Error fetching recent bug treatments:", error);
-    res.status(500).json({ error: "Failed to fetch recent bug treatments" });
+    console.error("Error fetching recent bug treatments:", error)
+    res.status(500).json({ error: "Failed to fetch recent bug treatments" })
   }
-});
+})
 
 router.get("/bug-treatments/:id", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
     const treatment = await BugTreatment.findByPk(id, {
       include: Location,
-    });
+    })
     if (!treatment) {
-      return res.status(404).json({ error: "Bug treatment not found" });
+      return res.status(404).json({ error: "Bug treatment not found" })
     }
-    res.json(treatment);
+    res.json(treatment)
   } catch (error) {
-    console.error("Error fetching bug treatment:", error);
-    res.status(500).json({ error: "Failed to fetch bug treatment" });
+    console.error("Error fetching bug treatment:", error)
+    res.status(500).json({ error: "Failed to fetch bug treatment" })
   }
-});
+})
 
 router.get("/locations", async (req, res) => {
   try {
@@ -482,87 +482,87 @@ router.get("/locations", async (req, res) => {
           order: [["date", "DESC"]],
         },
       ],
-    });
-    res.json(locations);
+    })
+    res.json(locations)
   } catch (error) {
-    console.error("Error fetching locations:", error);
-    res.status(500).json({ error: "Failed to fetch locations" });
+    console.error("Error fetching locations:", error)
+    res.status(500).json({ error: "Failed to fetch locations" })
   }
-});
+})
 
 router.post("/locations/new", async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description } = req.body
     if (!name)
-      return res.status(400).json({ error: "Location name is required." });
-    const newLocation = await Location.create({ name, description });
-    res.status(201).json(newLocation);
+      return res.status(400).json({ error: "Location name is required." })
+    const newLocation = await Location.create({ name, description })
+    res.status(201).json(newLocation)
   } catch (error) {
-    console.error("Error creating location:", error);
-    res.status(500).json({ error: "Failed to create location" });
+    console.error("Error creating location:", error)
+    res.status(500).json({ error: "Failed to create location" })
   }
-});
+})
 
 router.post("/locations/:id/edit", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { name, description } = req.body;
-    const loc = await Location.findByPk(id);
+    const { id } = req.params
+    const { name, description } = req.body
+    const loc = await Location.findByPk(id)
     if (!loc) {
-      return res.status(404).json({ error: "Location not found" });
+      return res.status(404).json({ error: "Location not found" })
     }
-    loc.name = name || loc.name;
-    loc.description = description || loc.description;
-    await loc.save();
-    res.json(loc);
+    loc.name = name || loc.name
+    loc.description = description || loc.description
+    await loc.save()
+    res.json(loc)
   } catch (error) {
-    console.error("Error updating location:", error);
-    res.status(500).json({ error: "Failed to update location" });
+    console.error("Error updating location:", error)
+    res.status(500).json({ error: "Failed to update location" })
   }
-});
+})
 
 router.get("/locations/:id", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
     const loc = await Location.findByPk(id, {
       include: [
         { model: Plant, include: [VegetableType] },
         { model: BugTreatment, order: [["date", "DESC"]] },
       ],
-    });
+    })
     if (!loc) {
-      return res.status(404).json({ error: "Location not found" });
+      return res.status(404).json({ error: "Location not found" })
     }
-    res.json(loc);
+    res.json(loc)
   } catch (error) {
-    console.error("Error fetching location:", error);
-    res.status(500).json({ error: "Failed to fetch location" });
+    console.error("Error fetching location:", error)
+    res.status(500).json({ error: "Failed to fetch location" })
   }
-});
+})
 
 router.get("/locations/:id/bug-treatments", async (req, res) => {
   try {
-    const { id } = req.params;
-    const locationExists = await Location.findByPk(id);
+    const { id } = req.params
+    const locationExists = await Location.findByPk(id)
     if (!locationExists) {
-      return res.status(404).json({ error: "Location not found" });
+      return res.status(404).json({ error: "Location not found" })
     }
     const treatments = await BugTreatment.findAll({
       where: { locationId: id },
       order: [["date", "DESC"]],
-    });
-    res.json(treatments);
+    })
+    res.json(treatments)
   } catch (error) {
-    console.error("Error fetching bug treatments for location:", error);
+    console.error("Error fetching bug treatments for location:", error)
     res
       .status(500)
-      .json({ error: "Failed to fetch bug treatments for this location" });
+      .json({ error: "Failed to fetch bug treatments for this location" })
   }
-});
+})
 
 router.post("/locations/:id/delete", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
 
     const loc = await Location.findByPk(id, {
       include: [
@@ -572,35 +572,35 @@ router.post("/locations/:id/delete", async (req, res) => {
         },
         { model: BugTreatment },
       ],
-    });
+    })
     if (!loc) {
-      return res.status(404).json({ error: "Location not found" });
+      return res.status(404).json({ error: "Location not found" })
     }
-    const deletionPromises = [];
+    const deletionPromises = []
 
     if (loc.Plants) {
       for (const plant of loc.Plants) {
         if (plant.VegetableType) {
-          deletionPromises.push(plant.VegetableType.destroy());
+          deletionPromises.push(plant.VegetableType.destroy())
         }
-        deletionPromises.push(plant.destroy());
+        deletionPromises.push(plant.destroy())
       }
     }
 
     if (loc.BugTreatments) {
       loc.BugTreatments.forEach((treatment) => {
-        deletionPromises.push(treatment.destroy());
-      });
+        deletionPromises.push(treatment.destroy())
+      })
     }
 
-    await Promise.all(deletionPromises);
+    await Promise.all(deletionPromises)
 
-    await loc.destroy();
-    res.status(204).send();
+    await loc.destroy()
+    res.status(204).send()
   } catch (error) {
-    console.error("Error deleting location:", error);
-    res.status(500).json({ error: "Failed to delete location" });
+    console.error("Error deleting location:", error)
+    res.status(500).json({ error: "Failed to delete location" })
   }
-});
+})
 
-module.exports = router;
+module.exports = router
