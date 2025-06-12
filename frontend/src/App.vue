@@ -18,7 +18,7 @@ import {
     <h1 class="text-4xl font-bold text-zinc-800 mb-3">
       Garden
     </h1>
-    <Card :class="cn('w-[92vw] h-[92vh] py-0', $attrs.class ?? '')">
+    <Card :class="cn('w-[92vw] h-[92vh] py-0 xl:overflow-hidden lg:overflow-hidden md:overflow-y-auto sm: overflow-y-auto', $attrs.class ?? '')">
       <CardHeader>
         <CardTitle></CardTitle>
         <CardDescription></CardDescription>

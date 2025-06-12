@@ -294,9 +294,9 @@
                     Add Plant <Plus class="w-4 h-4 ml-2" />
                 </Button>
                 
-                <ul>
+                <ul class = "max-h-28 overflow-y-auto scroll-m-1 scroll" style = "scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent; ">
                     <li v-if ="!location.Plants || location.Plants.length === 0">No plants in location</li>
-                    <li class = "flex items-center justify-between mb-1.5" v-for="plant in location.Plants" :key="plant.id">
+                    <li class = "flex items-center justify-between mb-1.5 overflow-hidden text-nowrap whitespace-nowrap" v-for="plant in location.Plants" :key="plant.id">
                         <div class="flex items-center w-fit min-w-fit">
                             <template v-if="plant.icon && getIconDefinitionByName(plant.icon)">
                                 <GenericIconRenderer
@@ -310,7 +310,7 @@
                                     class="w-5 h-5 mr-2 flex-shrink-0" />
                             </template>
                             <span v-else class="inline-block w-5 h-5 mr-2 flex-shrink-0"></span>
-                            {{ plant.name }}
+                            <div class = "text-nowrap overflow-ellipsis">{{ plant.name }}</div>
                         </div>
                         
                         <div class = "flex items-center">
