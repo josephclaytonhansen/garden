@@ -10,10 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+
 </script>
 
 <template>
-  <div class="flex items-center justify-center h-screen overflow-hidden w-screen">
+  <div class="flex items-center justify-center h-screen overflow-hidden w-screen flex-col flex-nowrap">
+    <h1 class="text-4xl font-bold text-zinc-800 mb-3">
+      Garden
+    </h1>
     <Card :class="cn('w-[92vw] h-[92vh] py-0', $attrs.class ?? '')">
       <CardHeader>
         <CardTitle></CardTitle>
@@ -21,6 +25,7 @@ import {
       </CardHeader>
       <CardContent class="grid gap-4">
         <TabNav>
+
         </TabNav>
       </CardContent>
       <CardFooter>

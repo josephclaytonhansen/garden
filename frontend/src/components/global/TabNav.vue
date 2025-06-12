@@ -1,47 +1,74 @@
 <script setup lang="ts">
-    import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+    import { ref } from 'vue'
+    import Location from '@/components/tabs/Location.vue'
+    import { Plus } from 'lucide-vue-next'
+    import Button from '../ui/button/Button.vue'
+    import axios from 'axios'
+
+    import {
+        Popover,
+        PopoverContent,
+        PopoverTrigger,
+    } from '@/components/ui/popover'
+
+    const newLocationName = ref('')
+    const isPopoverOpen = ref(false)
+    const locationComponentRef = ref<InstanceType<typeof Location> | null>(null);
+    const API_BASE_URL = `https://${import.meta.env.VITE_API_DOMAIN}`
+
+    const AddLocation = async () => {
+        if (!newLocationName.value.trim()) {
+            console.error("Location name cannot be empty");
+            return;
+        }
+        try {
+            const response = await axios.post(`${API_BASE_URL}/locations/new`, {
+                name: newLocationName.value
+            });
+            console.log('Location added:', response.data);
+            newLocationName.value = '';
+            isPopoverOpen.value = false
+            locationComponentRef.value?.fetchLocations();
+        } catch (error) {
+            console.error('Failed to add location:', error);
+        }
+    }
 </script>
 
 <template>
-    <Tabs default-value="harvest" class = "w-full flex flex-col items-center justify-center">
-    <TabsList class = "m-auto">
-        <TabsTrigger value="locations">
-            Locations
-        </TabsTrigger>
-        <TabsTrigger value="plant-types">
-            Plant Types
-        </TabsTrigger>
-        <TabsTrigger value="plants">
-            Plants
-        </TabsTrigger>
-        <TabsTrigger value="harvest">
-            Harvest
-        </TabsTrigger>
-        <TabsTrigger value="bug-treatment">
-            Bug Treatment
-        </TabsTrigger>
-    </TabsList>
 
-        <TabsContent value="locations" class = "w-full">
-            <h2>Locations</h2>
-            <slot name="locations" />
-        </TabsContent>
-        <TabsContent value="plant-types" class = "w-full">
-            <h2>Plant Types</h2>
-            <slot name="plant-types" />
-        </TabsContent>
-        <TabsContent value="plants" class = "w-full">
-            <h2>Plants</h2>
-            <slot name="plants" />
-        </TabsContent>
-        <TabsContent value="harvest" class = "w-full">
-            <h2>Harvest</h2>
-            <slot name="harvest" />
-        </TabsContent>
-        <TabsContent value="bug-treatment" class = "w-full">
-            <h2>Bug Treatment</h2>
-            <slot name="bug-treatment" />
-        </TabsContent>
-    </Tabs>
 
+
+            <div class="flex justify-between items-center mb-4">
+                <h2>Locations</h2>
+                <Popover v-model:open="isPopoverOpen">
+                    <PopoverTrigger class = "w-20">
+                        <Button variant="outline" size="icon" class="ml-auto w-20">
+                        New <Plus class="w-4 h-4" />
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent class="w-80">
+                        <form @submit.prevent="AddLocation">
+                            <div class="grid gap-4">
+                                <label for="location-name" class="block text">
+                                    Location Name
+                                </label>
+                                <input
+                                    id="location-name"
+                                    type="text"
+                                    v-model="newLocationName"
+                                    class="input input-bordered w-full"
+                                    placeholder="Enter location name"
+                                    required
+                                />
+                                <Button type="submit">
+                                    Add Location
+                                </Button>
+                            </div>
+                        </form>
+                    </PopoverContent>
+                </Popover>
+            </div>
+            <Location ref="locationComponentRef" />
+        
 </template>
