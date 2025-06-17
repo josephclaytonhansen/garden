@@ -14,7 +14,6 @@
   - **Parameters:**
     - **Body:**
       - `name` (string, **required**): The name of the location.
-      - `description` (string, optional): A description of the location.
   - **Response:** The newly created Location object.
 
 - **POST /locations/:id/edit**
@@ -25,7 +24,6 @@
       - `id` (integer, **required**): The ID of the location to update.
     - **Body:**
       - `name` (string, optional): The new name for the location.
-      - `description` (string, optional): The new description for the location.
   - **Response:** The updated Location object.
 
 - **GET /locations/:id**
@@ -34,7 +32,7 @@
   - **Parameters:**
     - **URL:**
       - `id` (integer, **required**): The ID of the location to retrieve.
-  - **Response:** A Location object with nested Plant and BugTreatment data.
+  - **Response:** A Location object with nested Plant (including its Vegetables) and BugTreatment data.
 
 - **GET /locations/:id/bug-treatments**
 
@@ -55,7 +53,7 @@
 
 - **GET /plants**
 
-  - **Description:** Retrieves a list of all plants, including their associated location and vegetable type.
+  - **Description:** Retrieves a list of all plants, including their associated location and harvested vegetables.
   - **Parameters:** None.
   - **Response:** Array of Plant objects.
 
@@ -68,6 +66,7 @@
       - `plantedAt` (date string, optional): The date the plant was planted.
       - `locationId` (integer, optional): The ID of the location where the plant is located.
       - `origin` (string, optional): The origin of the plant (e.g., seed source).
+      - `icon` (string, optional): An icon identifier for the plant.
   - **Response:** The newly created Plant object.
 
 - **POST /plants/:id/edit**
@@ -81,23 +80,16 @@
       - `plantedAt` (date string, optional): The new planted date.
       - `locationId` (integer, optional): The new location ID.
       - `origin` (string, optional): The new origin.
+      - `icon` (string, optional): The new icon identifier.
   - **Response:** The updated Plant object.
 
 - **GET /plants/:id**
 
-  - **Description:** Retrieves details for a specific plant by ID, including its associated location and vegetable type.
+  - **Description:** Retrieves details for a specific plant by ID, including its associated location and harvested vegetables.
   - **Parameters:**
     - **URL:**
       - `id` (integer, **required**): The ID of the plant to retrieve.
-  - **Response:** A Plant object with nested Location and VegetableType data.
-
-- **GET /plants/:id/vegetabletype**
-
-  - **Description:** Retrieves the vegetable type associated with a specific plant by ID.
-  - **Parameters:**
-    - **URL:**
-      - `id` (integer, **required**): The ID of the plant.
-  - **Response:** A VegetableType object or `null` if no type is associated.
+  - **Response:** A Plant object with nested Location and Vegetable data.
 
 - **POST /plants/:id/delete**
   - **Description:** Deletes a plant by ID.
@@ -106,62 +98,11 @@
       - `id` (integer, **required**): The ID of the plant to delete.
   - **Response:** Status 204 (No Content) on successful deletion.
 
-## VegetableType
-
-- **GET /VegetableTypes**
-
-  - **Description:** Retrieves a list of all vegetable types.
-  - **Parameters:** None.
-  - **Response:** Array of VegetableType objects.
-
-- **POST /VegetableTypes/new**
-
-  - **Description:** Creates a new vegetable type.
-  - **Parameters:**
-    - **Body:**
-      - `name` (string, **required**): The name of the vegetable type.
-      - `icon` (string, optional): An icon identifier for the type.
-  - **Response:** The newly created VegetableType object.
-
-- **POST /VegetableTypes/:id/edit**
-
-  - **Description:** Updates an existing vegetable type by ID.
-  - **Parameters:**
-    - **URL:**
-      - `id` (integer, **required**): The ID of the vegetable type to update.
-    - **Body:**
-      - `name` (string, optional): The new name for the type.
-      - `icon` (string, optional): The new icon identifier.
-  - **Response:** The updated VegetableType object.
-
-- **GET /VegetableTypes/:id**
-
-  - **Description:** Retrieves details for a specific vegetable type by ID, including associated vegetables and plants.
-  - **Parameters:**
-    - **URL:**
-      - `id` (integer, **required**): The ID of the vegetable type to retrieve.
-  - **Response:** A VegetableType object with nested Vegetable and Plant data.
-
-- **GET /VegetableTypes/:id/Vegetables**
-
-  - **Description:** Retrieves a list of vegetables associated with a specific vegetable type by ID.
-  - **Parameters:**
-    - **URL:**
-      - `id` (integer, **required**): The ID of the vegetable type.
-  - **Response:** Array of Vegetable objects.
-
-- **POST /VegetableTypes/:id/delete**
-  - **Description:** Deletes a vegetable type by ID.
-  - **Parameters:**
-    - **URL:**
-      - `id` (integer, **required**): The ID of the vegetable type to delete.
-  - **Response:** Status 204 (No Content) on successful deletion.
-
 ## Vegetable
 
 - **GET /vegetables**
 
-  - **Description:** Retrieves a list of all vegetables, including their associated vegetable type.
+  - **Description:** Retrieves a list of all vegetables, including their associated plant.
   - **Parameters:** None.
   - **Response:** Array of Vegetable objects.
 
@@ -173,7 +114,7 @@
       - `rating` (integer, optional): A rating for the harvest.
       - `quantity` (integer, optional): The quantity harvested.
       - `harvestedAt` (date string, optional): The date of harvest.
-      - `vegetableTypeId` (integer, **required**): The ID of the associated vegetable type.
+      - `plantId` (integer, **required**): The ID of the associated plant.
   - **Response:** The newly created Vegetable object.
 
 - **POST /vegetables/:id/edit**
@@ -183,20 +124,19 @@
     - **URL:**
       - `id` (integer, **required**): The ID of the vegetable entry to update.
     - **Body:**
-      - `name` (string, optional): The new name.
       - `rating` (integer, optional): The new rating.
       - `quantity` (integer, optional): The new quantity.
       - `harvestedAt` (date string, optional): The new harvest date.
-      - `vegetableTypeId` (integer, optional): The new vegetable type ID.
+      - `plantId` (integer, optional): The new plant ID.
   - **Response:** The updated Vegetable object.
 
 - **GET /vegetables/:id**
 
-  - **Description:** Retrieves details for a specific vegetable entry by ID, including its associated vegetable type.
+  - **Description:** Retrieves details for a specific vegetable entry by ID, including its associated plant.
   - **Parameters:**
     - **URL:**
       - `id` (integer, **required**): The ID of the vegetable entry to retrieve.
-  - **Response:** A Vegetable object with nested VegetableType data.
+  - **Response:** A Vegetable object with nested Plant data.
 
 - **POST /vegetables/:id/delete**
   - **Description:** Deletes a vegetable entry by ID.
@@ -246,40 +186,6 @@
   - **Response:** A BugTreatment object with nested Location data.
 
 ## Association Management
-
-- **POST /attachVegetableTypeToPlant**
-
-  - **Description:** Attaches an existing vegetable type to an existing plant. This updates the `plantId` on the `VegetableType`.
-  - **Parameters:**
-    - **Body:**
-      - `plantId` (integer, **required**): The ID of the plant.
-      - `vegetableTypeId` (integer, **required**): The ID of the vegetable type to attach.
-  - **Response:** The updated VegetableType object.
-
-- **POST /detachVegetableTypeFromPlant**
-
-  - **Description:** Detaches a vegetable type from its currently associated plant. This sets the `plantId` on the `VegetableType` to `null`.
-  - **Parameters:**
-    - **Body:**
-      - `vegetableTypeId` (integer, **required**): The ID of the vegetable type to detach.
-  - **Response:** The updated VegetableType object.
-
-- **POST /attachVegetableToType**
-
-  - **Description:** Attaches an existing vegetable to an existing vegetable type. This updates the `vegetableTypeId` on the `Vegetable`.
-  - **Parameters:**
-    - **Body:**
-      - `vegetableId` (integer, **required**): The ID of the vegetable.
-      - `vegetableTypeId` (integer, **required**): The ID of the vegetable type to attach.
-  - **Response:** The updated Vegetable object.
-
-- **POST /detachVegetableFromType**
-
-  - **Description:** Detaches a vegetable from its currently associated vegetable type. This sets the `vegetableTypeId` on the `Vegetable` to `null`.
-  - **Parameters:**
-    - **Body:**
-      - `vegetableId` (integer, **required**): The ID of the vegetable to detach.
-  - **Response:** The updated Vegetable object.
 
 - **POST /attachPlantToLocation**
 

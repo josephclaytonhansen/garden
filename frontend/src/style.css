@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 body {
-  @apply bg-gradient-to-b from-yellow-200 to-amber-400;
+  @apply bg-gradient-to-b from-yellow-100 to-amber-300;
 }
 
 @theme inline {

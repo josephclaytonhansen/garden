@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import { ref, onMounted, computed } from "vue"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -28,6 +28,7 @@ import {
 	Utensils,
 	Flower,
 	Sprout,
+	Replace,
 	type IconNode as LucideVueNextIconNode,
 	Trash,
 } from "lucide-vue-next"
@@ -46,6 +47,15 @@ import {
 	NumberFieldIncrement,
 	NumberFieldInput,
 } from "@/components/ui/number-field"
+
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 
 import { Input } from "../ui/input"
 
@@ -105,13 +115,19 @@ interface Location {
 import {
 	Popover,
 	PopoverContent,
-	PopoverTrigger,
+	PopoverTrigger, // Import PopoverTrigger
 } from "@/components/ui/popover"
 
 const locations = ref<Location[]>([])
 const isAddPlantPopoverOpen = ref(false)
 const currentTargetLocationId = ref<number | null>(null)
 const newPlantName = ref("")
+
+const isTransplantPopoverOpen = ref(false)
+const transplantCandidateLocation = ref<Location | null>(null)
+const selectedPlantToMoveId = ref<number | null>(null)
+const selectedDestinationLocationId = ref<number | null>(null)
+
 const newPlantPlantedAt = ref("")
 const newPlantOrigin = ref("")
 const plantHarvestQuantities = ref<{
@@ -245,6 +261,62 @@ function openAddPlantPopover(locationId: number) {
 	newPlantPlantedAt.value = ""
 	newPlantOrigin.value = ""
 	isAddPlantPopoverOpen.value = true
+	// console.log("[DEBUG] openAddPlantPopover: isAddPlantPopoverOpen =", isAddPlantPopoverOpen.value, "currentTargetLocationId =", currentTargetLocationId.value);
+}
+
+const plantsInCandidateLocation = computed(() => {
+	return transplantCandidateLocation.value?.Plants || []
+})
+
+const availableDestinationLocations = computed(() => {
+	if (!transplantCandidateLocation.value) return []
+	return locations.value.filter(
+		(loc) => loc.id !== transplantCandidateLocation.value!.id
+	)
+})
+
+function openTransplantPopoverForLocation(location: Location) {
+	transplantCandidateLocation.value = location
+	selectedPlantToMoveId.value = null
+	selectedDestinationLocationId.value = null
+	isTransplantPopoverOpen.value = true
+	// console.log("[DEBUG] openTransplantPopoverForLocation: isTransplantPopoverOpen =", isTransplantPopoverOpen.value, "candidate:", location.name);
+}
+
+async function handleTransplantSubmit() {
+	if (!selectedPlantToMoveId.value || !selectedDestinationLocationId.value) {
+		console.error("Plant and destination location must be selected.")
+		// Optionally, show a user-facing error message here
+		return
+	}
+	await transplant(
+		selectedPlantToMoveId.value,
+		selectedDestinationLocationId.value
+	)
+	isTransplantPopoverOpen.value = false
+}
+async function transplant(plantId: number, newLocationId: number) {
+	try {
+		await axios.post(`${API_BASE_URL}/detachPlantFromLocation`, {
+			plantId,
+		})
+
+		const response = await axios.post(
+			`${API_BASE_URL}/attachPlantToLocation`,
+			{
+				plantId,
+				locationId: newLocationId,
+			}
+		)
+
+		console.log("Plant transplanted successfully:", response.data)
+		fetchLocations()
+	} catch (error) {
+		console.error(
+			`Failed to transplant plant ${plantId} to location ${newLocationId}:`,
+			error
+		)
+	}
 }
 
 async function newBugTreatment(
@@ -412,19 +484,31 @@ defineExpose({
 								@click="deleteLocation(location.id)">
 								<Trash class="mr-2" />Delete Location
 							</DropdownMenuItem>
+							<DropdownMenuItem
+								class="hover:bg-primary hover:text-white"
+								@select.prevent="
+									openTransplantPopoverForLocation(location)
+								">
+								<Replace class="mr-2" />Transplant Plant from
+								this Location
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
 			</CardHeader>
 			<CardContent>
-				<h3 class="text-sm text-muted-foreground">
-					Last bug treatment:
-					{{ getLastBugTreatmentDate(location.id) }}
-				</h3>
-				<hr class="my-2" />
+				<div>
+					<h3 class="text-sm text-muted-foreground">
+						Last bug treatment:
+						{{ getLastBugTreatmentDate(location.id) }}
+					</h3>
+					<hr class="my-2" />
+				</div>
+
 				<Popover
-					v-if="currentTargetLocationId === location.id"
-					v-model:open="isAddPlantPopoverOpen">
+					:open="isAddPlantPopoverOpen && currentTargetLocationId === location.id"
+					@update:open="(isOpen) => { if (!isOpen) { isAddPlantPopoverOpen = false; } }"
+				>
 					<PopoverTrigger as-child>
 						<Button
 							@click="openAddPlantPopover(location.id)"
@@ -436,85 +520,81 @@ defineExpose({
 						</Button>
 					</PopoverTrigger>
 					<PopoverContent class="w-80">
-						<form @submit.prevent="handleAddPlantSubmit">
-							<div class="grid gap-4">
-								<h4 class="font-semibold leading-none">
-									Add Plant to {{ location.name }}
-								</h4>
-								<div>
-									<label :for="`plantName-${location.id}`"
-										>Plant Name</label
-									>
-									<Input
-										type="text"
-										:id="`plantName-${location.id}`"
-										v-model="newPlantName"
-										required />
-								</div>
-								<div>
-									<label :for="`plantedAt-${location.id}`"
-										>Planted At</label
-									>
-									<Input
-										type="date"
-										:id="`plantedAt-${location.id}`"
-										v-model="newPlantPlantedAt" />
-								</div>
-								<div>
-									<label :for="`origin-${location.id}`"
-										>Origin</label
-									>
-									<Input
-										type="text"
-										:id="`origin-${location.id}`"
-										v-model="newPlantOrigin" />
-								</div>
-								<div>
-									<label>Icon</label>
-									<div
-										class="grid grid-cols-5 gap-2 mt-1 border p-2 rounded-md">
-										<Button
-											v-for="iconItem in plantIcons"
-											:key="iconItem.name"
-											@click="
-												selectedIconName = iconItem.name
-											"
-											variant="outline"
-											size="icon"
-											:class="{
-												'bg-primary text-white':
-													selectedIconName ===
-													iconItem.name,
-											}"
-											type="button">
-											<GenericIconRenderer
-												v-if="iconItem.isLabIcon"
-												:name="iconItem.name"
-												:iconNode="iconItem.iconData"
-												class="w-5 h-5" />
-											<component
-												v-else
-												:is="iconItem.iconData"
-												class="w-5 h-5" />
-										</Button>
+						<div v-if="currentTargetLocationId === location.id">
+							<form @submit.prevent="handleAddPlantSubmit">
+								<div class="grid gap-4">
+									<h4 class="font-semibold leading-none">
+										Add Plant to {{ location.name }}
+									</h4>
+									<div>
+										<Label :for="`plantName-${location.id}`"
+											>Plant Name</Label
+										>
+										<Input
+											type="text"
+											:id="`plantName-${location.id}`"
+											v-model="newPlantName"
+											required />
 									</div>
+									<div>
+										<Label :for="`plantedAt-${location.id}`"
+											>Planted At</Label
+										>
+										<Input
+											type="date"
+											:id="`plantedAt-${location.id}`"
+											v-model="newPlantPlantedAt" />
+									</div>
+									<div>
+										<Label :for="`origin-${location.id}`"
+											>Origin</Label
+										>
+										<Input
+											type="text"
+											:id="`origin-${location.id}`"
+											v-model="newPlantOrigin" />
+									</div>
+									<div>
+										<Label>Icon</Label>
+										<div
+											class="grid grid-cols-5 gap-2 mt-1 border p-2 rounded-md">
+											<Button
+												v-for="iconItem in plantIcons"
+												:key="iconItem.name"
+												@click="
+													selectedIconName =
+														iconItem.name
+												"
+												variant="outline"
+												size="icon"
+												:class="{
+													'bg-primary text-white':
+														selectedIconName ===
+														iconItem.name,
+												}"
+												type="button">
+												<GenericIconRenderer
+													v-if="iconItem.isLabIcon"
+													:name="iconItem.name"
+													:iconNode="
+														iconItem.iconData
+													"
+													class="w-5 h-5" />
+												<component
+													v-else
+													:is="iconItem.iconData"
+													class="w-5 h-5" />
+											</Button>
+										</div>
+									</div>
+									<Button type="submit" class="w-full"
+										>Add Plant</Button
+									>
 								</div>
-								<Button type="submit" class="w-full"
-									>Add Plant</Button
-								>
-							</div>
-						</form>
+							</form>
+						</div>
 					</PopoverContent>
 				</Popover>
-				<Button
-					v-else
-					@click="openAddPlantPopover(location.id)"
-					variant="outline"
-					size="sm"
-					class="mb-2">
-					Add Plant
-					<Plus class="w-4 h-4 ml-2" />
-				</Button>
 
 				<ul
 					class="max-h-28 overflow-y-auto scroll-m-1 scroll"
@@ -604,6 +684,77 @@ defineExpose({
 			</CardContent>
 		</Card>
 	</div>
+
+	<Popover v-model:open="isTransplantPopoverOpen">
+		<PopoverTrigger as-child>
+			<button
+				style="
+					position: fixed;
+					top: 0;
+					left: 0;
+					width: 0;
+					height: 0;
+					opacity: 0;
+					border: none;
+					padding: 0;
+					margin: 0;
+				"
+				aria-hidden="true"
+				tabindex="-1"
+				ref="transplantPopoverAnchor"></button>
+		</PopoverTrigger>
+		<PopoverContent class="w-96">
+			<div v-if="transplantCandidateLocation">
+				<h4 class="font-medium leading-none mb-4">
+					Transplant Plant from {{ transplantCandidateLocation.name }}
+				</h4>
+				<form @submit.prevent="handleTransplantSubmit">
+					<div class="grid gap-4">
+						<div>
+							<Label for="plant-to-transplant" class="mb-1 block"
+								>Select Plant to Move</Label
+							>
+							<Select v-model="selectedPlantToMoveId">
+								<SelectTrigger id="plant-to-transplant">
+									<SelectValue placeholder="Choose a plant" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem
+										v-for="plant in plantsInCandidateLocation"
+										:key="plant.id"
+										:value="plant.id">
+										{{ plant.name }}
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+						<div>
+							<Label for="destination-location" class="mb-1 block"
+								>Move to New Location</Label
+							>
+							<Select v-model="selectedDestinationLocationId">
+								<SelectTrigger id="destination-location">
+									<SelectValue
+										placeholder="Choose destination" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem
+										v-for="loc in availableDestinationLocations"
+										:key="loc.id"
+										:value="loc.id">
+										{{ loc.name }}
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+						<Button type="submit" class="w-full mt-2"
+							>Transplant</Button
+						>
+					</div>
+				</form>
+			</div>
+		</PopoverContent>
+	</Popover>
 </template>
 
 <style scoped lang="scss"></style>
