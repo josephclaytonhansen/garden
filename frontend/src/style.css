@@ -3,6 +3,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+body {
+  @apply bg-gradient-to-b from-lime-400 to-lime-700;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -181,7 +185,7 @@
   }
 }
 
-h2{
+h2 {
   @apply text-2xl font-semibold tracking-tight;
 }
 
