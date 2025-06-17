@@ -3,12 +3,7 @@ import { ref, onMounted, computed } from "vue"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 import Button from "../ui/button/Button.vue"
 
@@ -31,14 +26,12 @@ import {
 	Replace,
 	type IconNode as LucideVueNextIconNode,
 	Trash,
+	Apple,
+	Cherry,
+	Wheat,
 } from "lucide-vue-next"
 
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 import {
 	NumberField,
@@ -48,13 +41,7 @@ import {
 	NumberFieldInput,
 } from "@/components/ui/number-field"
 
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 
 import { Input } from "../ui/input"
@@ -70,16 +57,16 @@ import {
 	strawberry,
 	flowerTulip,
 	flowerLotus,
+	avocado,
+	kiwi,
+	lemon,
+	pumpkin,
 } from "@lucide/lab"
 
-function getIconDefinitionByName(
-	name: string | null
-): PlantIconDefinition | undefined {
+function getIconDefinitionByName(name: string | null): PlantIconDefinition | undefined {
 	if (!name) return undefined
 	const lowerName = name.toLowerCase()
-	return plantIcons.find(
-		(iconDef) => iconDef.name.toLowerCase() === lowerName
-	)
+	return plantIcons.find((iconDef) => iconDef.name.toLowerCase() === lowerName)
 }
 
 interface BugTreatment {
@@ -239,6 +226,41 @@ const plantIcons: PlantIconDefinition[] = [
 		iconData: Sprout,
 		isLabIcon: false,
 	},
+	{
+		name: "Apple",
+		iconData: Apple,
+		isLabIcon: false,
+	},
+	{
+		name: "Cherry",
+		iconData: Cherry,
+		isLabIcon: false,
+	},
+	{
+		name: "Wheat",
+		iconData: Wheat,
+		isLabIcon: false,
+	},
+	{
+		name: "Avocado",
+		iconData: avocado,
+		isLabIcon: true,
+	},
+	{
+		name: "Kiwi",
+		iconData: kiwi,
+		isLabIcon: true,
+	},
+	{
+		name: "Lemon",
+		iconData: lemon,
+		isLabIcon: true,
+	},
+	{
+		name: "Pumpkin",
+		iconData: pumpkin,
+		isLabIcon: true,
+	},
 ]
 
 const API_BASE_URL = `https://${import.meta.env.VITE_API_DOMAIN}`
@@ -261,7 +283,6 @@ function openAddPlantPopover(locationId: number) {
 	newPlantPlantedAt.value = ""
 	newPlantOrigin.value = ""
 	isAddPlantPopoverOpen.value = true
-	// console.log("[DEBUG] openAddPlantPopover: isAddPlantPopoverOpen =", isAddPlantPopoverOpen.value, "currentTargetLocationId =", currentTargetLocationId.value);
 }
 
 const plantsInCandidateLocation = computed(() => {
@@ -270,29 +291,26 @@ const plantsInCandidateLocation = computed(() => {
 
 const availableDestinationLocations = computed(() => {
 	if (!transplantCandidateLocation.value) return []
-	return locations.value.filter(
-		(loc) => loc.id !== transplantCandidateLocation.value!.id
-	)
+	return locations.value.filter((loc) => loc.id !== transplantCandidateLocation.value!.id)
 })
 
 function openTransplantPopoverForLocation(location: Location) {
+	if (location.Plants.length === 0) {
+		console.warn("No plants available for transplant in this location.")
+		return
+	}
 	transplantCandidateLocation.value = location
 	selectedPlantToMoveId.value = null
 	selectedDestinationLocationId.value = null
 	isTransplantPopoverOpen.value = true
-	// console.log("[DEBUG] openTransplantPopoverForLocation: isTransplantPopoverOpen =", isTransplantPopoverOpen.value, "candidate:", location.name);
 }
 
 async function handleTransplantSubmit() {
 	if (!selectedPlantToMoveId.value || !selectedDestinationLocationId.value) {
 		console.error("Plant and destination location must be selected.")
-		// Optionally, show a user-facing error message here
 		return
 	}
-	await transplant(
-		selectedPlantToMoveId.value,
-		selectedDestinationLocationId.value
-	)
+	await transplant(selectedPlantToMoveId.value, selectedDestinationLocationId.value)
 	isTransplantPopoverOpen.value = false
 }
 async function transplant(plantId: number, newLocationId: number) {
@@ -301,38 +319,25 @@ async function transplant(plantId: number, newLocationId: number) {
 			plantId,
 		})
 
-		const response = await axios.post(
-			`${API_BASE_URL}/attachPlantToLocation`,
-			{
-				plantId,
-				locationId: newLocationId,
-			}
-		)
+		const response = await axios.post(`${API_BASE_URL}/attachPlantToLocation`, {
+			plantId,
+			locationId: newLocationId,
+		})
 
 		console.log("Plant transplanted successfully:", response.data)
 		fetchLocations()
 	} catch (error) {
-		console.error(
-			`Failed to transplant plant ${plantId} to location ${newLocationId}:`,
-			error
-		)
+		console.error(`Failed to transplant plant ${plantId} to location ${newLocationId}:`, error)
 	}
 }
 
-async function newBugTreatment(
-	locationId: number,
-	type: string,
-	date: string = new Date().toISOString()
-) {
+async function newBugTreatment(locationId: number, type: string, date: string = new Date().toISOString()) {
 	try {
-		const response = await axios.post(
-			`${API_BASE_URL}/bug-treatments/new`,
-			{
-				locationId,
-				type,
-				date,
-			}
-		)
+		const response = await axios.post(`${API_BASE_URL}/bug-treatments/new`, {
+			locationId,
+			type,
+			date,
+		})
 		console.log("Bug treatment created:", response.data)
 	} catch (error) {
 		console.error("Failed to create bug treatment:", error)
@@ -392,13 +397,9 @@ const getLastBugTreatmentDate = (locationId: number) => {
 	const location = locations.value.find((loc) => loc.id === locationId)
 	const treatments = location?.BugTreatments || []
 	if (treatments.length === 0) return "N/A"
-	const lastTreatment = treatments.reduce(
-		(latest: BugTreatment, current: BugTreatment) => {
-			return new Date(current.date) > new Date(latest.date)
-				? current
-				: latest
-		}
-	)
+	const lastTreatment = treatments.reduce((latest: BugTreatment, current: BugTreatment) => {
+		return new Date(current.date) > new Date(latest.date) ? current : latest
+	})
 	return new Date(lastTreatment.date).toLocaleDateString()
 }
 
@@ -408,13 +409,7 @@ const getVegetableCount = (plant: Plant) => {
 
 const getTotalVegetables = (locationId: number) => {
 	const location = locations.value.find((loc) => loc.id === locationId)
-	return (
-		location?.Plants.reduce(
-			(total, plant) =>
-				total + (plant.Vegetables ? plant.Vegetables.length : 0),
-			0
-		) || 0
-	)
+	return location?.Plants.reduce((total, plant) => total + (plant.Vegetables ? plant.Vegetables.length : 0), 0) || 0
 }
 
 onMounted(() => {
@@ -428,27 +423,20 @@ defineExpose({
 
 <template>
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-		<Card
-			v-for="location in locations"
-			:key="location.id"
-			:value="`location-${location.id}`">
+		<Card v-for="location in locations" :key="location.id" :value="`location-${location.id}`">
 			<CardHeader class="flex items-center justify-between">
 				<CardTitle>
 					{{ location.name }}
 					<TooltipProvider :delayDuration="250">
 						<Tooltip>
 							<TooltipTrigger>
-								<Badge class="ml-4" variant="secondary">{{
-									location.Plants?.length || 0
-								}}</Badge>
+								<Badge class="ml-4" variant="secondary">{{ location.Plants?.length || 0 }}</Badge>
 							</TooltipTrigger>
 							<TooltipContent> Total Plants </TooltipContent>
 						</Tooltip>
 						<Tooltip>
 							<TooltipTrigger>
-								<Badge class="ml-2" variant="outline">{{
-									getTotalVegetables(location.id) || 0
-								}}</Badge>
+								<Badge class="ml-2" variant="outline">{{ getTotalVegetables(location.id) || 0 }}</Badge>
 							</TooltipTrigger>
 							<TooltipContent> Total Vegetables </TooltipContent>
 						</Tooltip>
@@ -464,19 +452,12 @@ defineExpose({
 						<DropdownMenuContent>
 							<DropdownMenuItem
 								class="hover:bg-primary hover:text-white"
-								@click="
-									newBugTreatment(location.id, 'neem oil')
-								">
+								@click="newBugTreatment(location.id, 'neem oil')">
 								<Bug class="mr-2" />Neem Oil Treatment
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								class="hover:bg-primary hover:text-white"
-								@click="
-									newBugTreatment(
-										location.id,
-										'diatomaceous earth'
-									)
-								">
+								@click="newBugTreatment(location.id, 'diatomaceous earth')">
 								<Bug class="mr-2" />Diatomaceous Earth Treatment
 							</DropdownMenuItem>
 							<DropdownMenuItem
@@ -486,11 +467,8 @@ defineExpose({
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								class="hover:bg-primary hover:text-white"
-								@select.prevent="
-									openTransplantPopoverForLocation(location)
-								">
-								<Replace class="mr-2" />Transplant Plant from
-								this Location
+								@select.prevent="openTransplantPopoverForLocation(location)">
+								<Replace class="mr-2" />Transplant Plant from this Location
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
@@ -507,14 +485,15 @@ defineExpose({
 
 				<Popover
 					:open="isAddPlantPopoverOpen && currentTargetLocationId === location.id"
-					@update:open="(isOpen) => { if (!isOpen) { isAddPlantPopoverOpen = false; } }"
-				>
+					@update:open="
+						(isOpen) => {
+							if (!isOpen) {
+								isAddPlantPopoverOpen = false
+							}
+						}
+					">
 					<PopoverTrigger as-child>
-						<Button
-							@click="openAddPlantPopover(location.id)"
-							variant="outline"
-							size="sm"
-							class="mb-2">
+						<Button @click="openAddPlantPopover(location.id)" variant="outline" size="sm" class="mb-2">
 							Add Plant
 							<Plus class="w-4 h-4 ml-2" />
 						</Button>
@@ -523,13 +502,9 @@ defineExpose({
 						<div v-if="currentTargetLocationId === location.id">
 							<form @submit.prevent="handleAddPlantSubmit">
 								<div class="grid gap-4">
-									<h4 class="font-semibold leading-none">
-										Add Plant to {{ location.name }}
-									</h4>
+									<h4 class="font-semibold leading-none">Add Plant to {{ location.name }}</h4>
 									<div>
-										<Label :for="`plantName-${location.id}`"
-											>Plant Name</Label
-										>
+										<Label :for="`plantName-${location.id}`">Plant Name</Label>
 										<Input
 											type="text"
 											:id="`plantName-${location.id}`"
@@ -537,59 +512,39 @@ defineExpose({
 											required />
 									</div>
 									<div>
-										<Label :for="`plantedAt-${location.id}`"
-											>Planted At</Label
-										>
+										<Label :for="`plantedAt-${location.id}`">Planted At</Label>
 										<Input
 											type="date"
 											:id="`plantedAt-${location.id}`"
 											v-model="newPlantPlantedAt" />
 									</div>
 									<div>
-										<Label :for="`origin-${location.id}`"
-											>Origin</Label
-										>
-										<Input
-											type="text"
-											:id="`origin-${location.id}`"
-											v-model="newPlantOrigin" />
+										<Label :for="`origin-${location.id}`">Origin</Label>
+										<Input type="text" :id="`origin-${location.id}`" v-model="newPlantOrigin" />
 									</div>
 									<div>
 										<Label>Icon</Label>
-										<div
-											class="grid grid-cols-5 gap-2 mt-1 border p-2 rounded-md">
+										<div class="grid grid-cols-5 gap-2 mt-1 border p-2 rounded-md">
 											<Button
 												v-for="iconItem in plantIcons"
 												:key="iconItem.name"
-												@click="
-													selectedIconName =
-														iconItem.name
-												"
+												@click="selectedIconName = iconItem.name"
 												variant="outline"
 												size="icon"
 												:class="{
-													'bg-primary text-white':
-														selectedIconName ===
-														iconItem.name,
+													'bg-primary text-white': selectedIconName === iconItem.name,
 												}"
 												type="button">
 												<GenericIconRenderer
 													v-if="iconItem.isLabIcon"
 													:name="iconItem.name"
-													:iconNode="
-														iconItem.iconData
-													"
+													:iconNode="iconItem.iconData"
 													class="w-5 h-5" />
-												<component
-													v-else
-													:is="iconItem.iconData"
-													class="w-5 h-5" />
+												<component v-else :is="iconItem.iconData" class="w-5 h-5" />
 											</Button>
 										</div>
 									</div>
-									<Button type="submit" class="w-full"
-										>Add Plant</Button
-									>
+									<Button type="submit" class="w-full">Add Plant</Button>
 								</div>
 							</form>
 						</div>
@@ -598,65 +553,36 @@ defineExpose({
 
 				<ul
 					class="max-h-28 overflow-y-auto scroll-m-1 scroll"
-					style="
-						scrollbar-width: thin;
-						scrollbar-color: var(--color-muted) transparent;
-					">
-					<li v-if="!location.Plants || location.Plants.length === 0">
-						No plants in location
-					</li>
+					style="scrollbar-width: thin; scrollbar-color: var(--color-muted) transparent">
+					<li v-if="!location.Plants || location.Plants.length === 0">No plants in location</li>
 					<li
 						class="flex items-center justify-between mb-1.5 overflow-hidden text-nowrap whitespace-nowrap"
 						v-for="plant in location.Plants"
 						:key="plant.id">
 						<div class="flex items-center w-fit min-w-fit">
-							<template
-								v-if="
-									plant.icon &&
-									getIconDefinitionByName(plant.icon)
-								">
+							<template v-if="plant.icon && getIconDefinitionByName(plant.icon)">
 								<GenericIconRenderer
-									v-if="
-										getIconDefinitionByName(plant.icon)!
-											.isLabIcon
-									"
-									:name="
-										getIconDefinitionByName(plant.icon)!
-											.name
-									"
-									:iconNode="
-										getIconDefinitionByName(plant.icon)!
-											.iconData as LucideVueNextIconNode
-									"
+									v-if="getIconDefinitionByName(plant.icon)!.isLabIcon"
+									:name="getIconDefinitionByName(plant.icon)!.name"
+									:iconNode="getIconDefinitionByName(plant.icon)!.iconData as LucideVueNextIconNode"
 									class="w-5 h-5 mr-2 flex-shrink-0" />
 								<component
 									v-else
-									:is="
-										getIconDefinitionByName(plant.icon)!
-											.iconData
-									"
+									:is="getIconDefinitionByName(plant.icon)!.iconData"
 									class="w-5 h-5 mr-2 flex-shrink-0" />
 							</template>
-							<span
-								v-else
-								class="inline-block w-5 h-5 mr-2 flex-shrink-0"></span>
+							<span v-else class="inline-block w-5 h-5 mr-2 flex-shrink-0"></span>
 							<div class="text-nowrap overflow-ellipsis">
 								{{ plant.name }}
 							</div>
 						</div>
 
 						<div class="flex items-center">
-							<Badge class="ml-2" variant="default">{{
-								getVegetableCount(plant)
-							}}</Badge>
+							<Badge class="ml-2 hover:bg-secondary hover:text-primary" variant="secondary">{{ getVegetableCount(plant) }}</Badge>
 							<NumberField
-								:model-value="
-									plantHarvestQuantities[plant.id] || 1
-								"
+								:model-value="plantHarvestQuantities[plant.id] || 1"
 								@update:model-value="
-									(newValue) =>
-										(plantHarvestQuantities[plant.id] =
-											newValue === null ? 1 : newValue)
+									(newValue) => (plantHarvestQuantities[plant.id] = newValue === null ? 1 : newValue)
 								"
 								class="ml-2 w-24"
 								:min="1">
@@ -670,12 +596,7 @@ defineExpose({
 								variant="default"
 								size="icon"
 								class="ml-2 :hover:bg-primary :hover:text-white"
-								@click="
-									addVegetable(
-										plant.id,
-										plantHarvestQuantities[plant.id] || 1
-									)
-								">
+								@click="addVegetable(plant.id, plantHarvestQuantities[plant.id] || 1)">
 								<Utensils class="w-4 h-4" />
 							</Button>
 						</div>
@@ -711,9 +632,7 @@ defineExpose({
 				<form @submit.prevent="handleTransplantSubmit">
 					<div class="grid gap-4">
 						<div>
-							<Label for="plant-to-transplant" class="mb-1 block"
-								>Select Plant to Move</Label
-							>
+							<Label for="plant-to-transplant" class="mb-1 block">Select Plant to Move</Label>
 							<Select v-model="selectedPlantToMoveId">
 								<SelectTrigger id="plant-to-transplant">
 									<SelectValue placeholder="Choose a plant" />
@@ -729,13 +648,10 @@ defineExpose({
 							</Select>
 						</div>
 						<div>
-							<Label for="destination-location" class="mb-1 block"
-								>Move to New Location</Label
-							>
+							<Label for="destination-location" class="mb-1 block">Move to New Location</Label>
 							<Select v-model="selectedDestinationLocationId">
 								<SelectTrigger id="destination-location">
-									<SelectValue
-										placeholder="Choose destination" />
+									<SelectValue placeholder="Choose destination" />
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
@@ -747,9 +663,7 @@ defineExpose({
 								</SelectContent>
 							</Select>
 						</div>
-						<Button type="submit" class="w-full mt-2"
-							>Transplant</Button
-						>
+						<Button type="submit" class="w-full mt-2">Transplant</Button>
 					</div>
 				</form>
 			</div>
