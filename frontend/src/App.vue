@@ -15,7 +15,7 @@ import {
 
 <template>
   <div class="flex items-center justify-center h-screen overflow-hidden w-screen flex-col flex-nowrap">
-    <Card :class="cn('w-[92vw] h-[92vh] py-0 xl:overflow-hidden lg:overflow-hidden md:overflow-y-auto sm: overflow-y-auto', $attrs.class ?? '')">
+    <Card :class="cn('lg:w-[92vw] lg:h-[92vh] xl:w-[90vw] xl:h-[90vh] md:w-[92vw] md:h-[92vh] w-[100vw] h-[100vh] py-0 xl:overflow-hidden lg:overflow-hidden md:overflow-y-auto sm: overflow-y-auto', $attrs.class ?? '')">
       <CardHeader>
         <CardTitle></CardTitle>
         <CardDescription></CardDescription>
