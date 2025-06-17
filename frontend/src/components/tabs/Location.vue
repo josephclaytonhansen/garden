@@ -363,7 +363,7 @@ defineExpose({
 			<CardHeader class="flex items-center justify-between">
 				<CardTitle>
 					{{ location.name }}
-					<TooltipProvider>
+					<TooltipProvider :delayDuration="250">
 						<Tooltip>
 							<TooltipTrigger>
 								<Badge class="ml-4" variant="secondary">{{
@@ -372,9 +372,6 @@ defineExpose({
 							</TooltipTrigger>
 							<TooltipContent> Total Plants </TooltipContent>
 						</Tooltip>
-					</TooltipProvider>
-
-					<TooltipProvider>
 						<Tooltip>
 							<TooltipTrigger>
 								<Badge class="ml-2" variant="outline">{{

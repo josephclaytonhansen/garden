@@ -39,8 +39,8 @@ const AddLocation = async () => {
 	<div class="flex justify-between items-center mb-4">
 		<h2>Garden</h2>
 		<Popover v-model:open="isPopoverOpen">
-			<PopoverTrigger class="w-40">
-				<Button variant="outline" size="icon" class="w-40">
+			<PopoverTrigger class="w-36">
+				<Button variant="outline" size="icon" class="w-36">
 					New Location<Plus class="w-4 h-4" />
 				</Button>
 			</PopoverTrigger>
